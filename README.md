@@ -39,8 +39,11 @@ Uma api de gestão pessoal, voltada para controle de tarefas e gastos, visando c
 api/auth/register - Registra o usuário <br>
 api/auth/login - Logar o usuário <br>
 POST api/task - Criar uma tarefa <br>
+DELETE api/task/{id} - Deletar tarefa <br>
 POST api/{id}/taskstep - Criar os passos da tarefa <br>
+DELETE api/taskstep/{id} - Deletar passos da tarefa <br>
 GET api/task/{id} - Retornar a tarefa criada. <br>
+
 
 [![Captura-de-tela-2025-10-27-200258.png](https://i.postimg.cc/brcN11zT/Captura-de-tela-2025-10-27-200258.png)](https://postimg.cc/ygjHHg3g)
 
