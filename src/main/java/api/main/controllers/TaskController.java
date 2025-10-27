@@ -19,9 +19,8 @@ class TaskController {
     }
     @PostMapping()
     public ResponseEntity<Task> post(@RequestBody TaskDto taskDto) {
-         Task task = taskService.createTask(taskDto);
-
-         return  ResponseEntity.ok(task);
+        Task task = taskService.createTask(taskDto);
+        return  ResponseEntity.ok(task);
     }
 
     @GetMapping("/{taskId}")
