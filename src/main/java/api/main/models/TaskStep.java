@@ -18,10 +18,15 @@ public class TaskStep {
     @Column
     private String description;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(nullable = false)
+    private TaskStatus taskStatus;
+
     public TaskStep() {}
-    public TaskStep(Task task, String description) {
+    public TaskStep(Task task, String description, TaskStatus taskStatus) {
         this.task = task;
         this.description = description;
+        this.taskStatus = taskStatus;
     }
 
     public String getDescription() {
@@ -48,5 +53,11 @@ public class TaskStep {
         this.task = task;
     }
 
+    public TaskStatus getTaskStatus() {
+        return taskStatus;
+    }
 
+    public void setTaskStatus(TaskStatus taskStatus) {
+        this.taskStatus = taskStatus;
+    }
 }

@@ -44,8 +44,8 @@ public class TaskService {
 
     public Task createTaskStep(int taskId, TaskStepDto taskStepDto) {
         Task task = taskRepository.findById(taskId).get();
-
-        TaskStep taskStep = new TaskStep(task, taskStepDto.description());
+        TaskStatus taskStatus = taskStatusRepository.findById(1).get();
+        TaskStep taskStep = new TaskStep(task, taskStepDto.description(), taskStatus);
         taskStepRepository.save(taskStep);
 
         return task;
