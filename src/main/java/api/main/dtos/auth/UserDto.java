@@ -1,4 +1,6 @@
 package api.main.dtos.auth;
 
-public record UserDto(String username) {
+import java.util.UUID;
+
+public record UserDto(UUID id, String name, String email) {
 }
