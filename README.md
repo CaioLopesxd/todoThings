@@ -16,33 +16,40 @@ Uma api de gestão pessoal, voltada para controle de tarefas e gastos, visando c
 
 # Entidades 🏦
 
-### Tasks: Tarefas criadas pelo o usuário.
--id <br>
--task_status_id <br>
--user_id <br>
--description <br>
--title <br>
-### Task-steps: Passos necessários para a conclusão da tarefa.
--id <br>
--description <br>
-### Task-status: Mostrar o estado atual da tarefa.
--id <br>
--status <br>
-### Users: Responsável pelo login e informações de cada  usuário.
--id <br>
--email <br>
--name <br>
--password <br>
 
-# ROTAS 🛤️
+### Tasks  
+Representa as tarefas criadas pelo usuário.  
+- `id`  
+- `task_status_id`  
+- `user_id`  
+- `description`  
+- `title`  
 
-api/auth/register - Registra o usuário <br>
-api/auth/login - Logar o usuário <br>
-POST api/task - Criar uma tarefa <br>
-DELETE api/task/{id} - Deletar tarefa <br>
-POST api/{id}/taskstep - Criar os passos da tarefa <br>
-DELETE api/taskstep/{id} - Deletar passos da tarefa <br>
-GET api/task/{id} - Retornar a tarefa criada. <br>
+### Task-steps  
+Passos necessários para a conclusão da tarefa.  
+- `id`  
+- `description`  
+
+### Task-status  
+Define o estado atual da tarefa.  
+- `id`  
+- `status`  
+
+### Users  
+Dados de login e perfil de cada usuário.  
+- `id`  
+- `email`  
+- `name`  
+- `password`  
+
+## Rotas da API  
+- `POST /api/auth/register` — Registra o usuário  
+- `POST /api/auth/login` — Faz login do usuário  
+- `POST /api/task` — Cria uma tarefa  
+- `DELETE /api/task/{id}` — Deleta uma tarefa  
+- `POST /api/taskstep/{taskId}` — Cria um passo para a tarefa  
+- `DELETE /api/taskstep/{id}` — Deleta um passo de tarefa  
+- `GET /api/task/{id}` — Retorna a tarefa com o ID informado  
 
 
 [![Captura-de-tela-2025-10-27-200258.png](https://i.postimg.cc/brcN11zT/Captura-de-tela-2025-10-27-200258.png)](https://postimg.cc/ygjHHg3g)
