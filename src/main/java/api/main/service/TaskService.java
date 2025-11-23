@@ -12,6 +12,7 @@ import api.main.repositories.TaskStepRepository;
 import api.main.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -53,6 +54,10 @@ public class TaskService {
 
     public Task getTaskById(int taskId) {
         return taskRepository.findById(taskId).get();
+    }
+
+    public List<Task> getAllTasks() {
+        return taskRepository.findAll();
     }
 
     public Task updateTask(int TaskId, TaskDto taskDto) {
