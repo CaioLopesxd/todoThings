@@ -1,5 +1,6 @@
 package api.main.controllers;
 
+import api.main.dtos.auth.AuthResponseDto;
 import api.main.dtos.auth.LoginRequestDto;
 import api.main.dtos.auth.RegisterRequestDto;
 import api.main.dtos.auth.UserDto;
@@ -8,6 +9,8 @@ import api.main.models.User;
 import api.main.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -24,23 +27,40 @@ class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserDto> register(@RequestBody RegisterRequestDto requestDto) {
+    public ResponseEntity<AuthResponseDto> register(@RequestBody RegisterRequestDto requestDto) {
         try {
             User user = userMapper.toUser(requestDto);
             User savedUser = authService.createUser(user);
+            String token = authService.generateTokenForUser(savedUser);
             UserDto userDto = userMapper.toUserDto(savedUser);
-            return ResponseEntity.ok(userDto);
+            AuthResponseDto response = new AuthResponseDto(token, userDto);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserDto> login(@RequestBody LoginRequestDto requestDto) {
+    public ResponseEntity<AuthResponseDto> login(@RequestBody LoginRequestDto requestDto) {
         Optional<User> authenticatedUser = authService.authenticateUser(requestDto.email(), requestDto.password());
         
         if (authenticatedUser.isPresent()) {
-            UserDto userDto = userMapper.toUserDto(authenticatedUser.get());
+            User user = authenticatedUser.get();
+            String token = authService.generateTokenForUser(user);
+            UserDto userDto = userMapper.toUserDto(user);
+            AuthResponseDto response = new AuthResponseDto(token, userDto);
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+    
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            UserDto userDto = userMapper.toUserDto(user);
             return ResponseEntity.ok(userDto);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

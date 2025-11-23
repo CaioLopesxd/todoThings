@@ -13,6 +13,7 @@ import api.main.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -42,9 +43,37 @@ public class TaskService {
 
         return taskRepository.save(task);
     }
+    
+    public Task createTask(TaskDto taskDto, User user) {
+        TaskStatus taskStatus = taskStatusRepository.findById(1).get();
+        Task task = new Task(taskDto.title(),
+                             taskDto.description(),
+                             taskStatus);
+        task.setUser(user);
+
+        return taskRepository.save(task);
+    }
 
     public Task createTaskStep(int taskId, TaskStepDto taskStepDto) {
         Task task = taskRepository.findById(taskId).get();
+        TaskStatus taskStatus = taskStatusRepository.findById(1).get();
+        TaskStep taskStep = new TaskStep(task, taskStepDto.description(), taskStatus);
+        taskStepRepository.save(taskStep);
+
+        return task;
+    }
+    
+    public Task createTaskStep(int taskId, TaskStepDto taskStepDto, User user) {
+        Optional<Task> taskOptional = taskRepository.findById(taskId);
+        if (taskOptional.isEmpty()) {
+            return null;
+        }
+        
+        Task task = taskOptional.get();
+        if (!task.getUser().getId().equals(user.getId())) {
+            return null;
+        }
+        
         TaskStatus taskStatus = taskStatusRepository.findById(1).get();
         TaskStep taskStep = new TaskStep(task, taskStepDto.description(), taskStatus);
         taskStepRepository.save(taskStep);
@@ -55,9 +84,27 @@ public class TaskService {
     public Task getTaskById(int taskId) {
         return taskRepository.findById(taskId).get();
     }
+    
+    public Task getTaskById(int taskId, User user) {
+        Optional<Task> taskOptional = taskRepository.findById(taskId);
+        if (taskOptional.isEmpty()) {
+            return null;
+        }
+        
+        Task task = taskOptional.get();
+        if (!task.getUser().getId().equals(user.getId())) {
+            return null;
+        }
+        
+        return task;
+    }
 
     public List<Task> getAllTasks() {
         return taskRepository.findAll();
+    }
+    
+    public List<Task> getAllTasksByUser(User user) {
+        return taskRepository.findByUser(user);
     }
 
     public Task updateTask(int TaskId, TaskDto taskDto) {
@@ -65,6 +112,7 @@ public class TaskService {
 
         return taskRepository.save(task);
     }
+    
     public Task deleteTask(int id) {
         taskRepository.deleteById(id);
 

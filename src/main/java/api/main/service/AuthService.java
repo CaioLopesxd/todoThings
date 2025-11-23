@@ -11,10 +11,12 @@ import java.util.Optional;
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
     
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     public User createUser(User user) {
@@ -28,5 +30,9 @@ public class AuthService {
             return user;
         }
         return Optional.empty();
+    }
+    
+    public String generateTokenForUser(User user) {
+        return jwtService.generateToken(user.getId());
     }
 }
