@@ -7,10 +7,9 @@ import api.main.dtos.auth.UserDto;
 import api.main.mappers.auth.UserMapper;
 import api.main.models.User;
 import api.main.service.AuthService;
+import api.main.util.SecurityUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -57,13 +56,18 @@ class AuthController {
     
     @GetMapping("/me")
     public ResponseEntity<UserDto> getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Optional<User> currentUser = SecurityUtils.getCurrentUser();
         
-        if (authentication != null && authentication.getPrincipal() instanceof User user) {
-            UserDto userDto = userMapper.toUserDto(user);
+        if (currentUser.isPresent()) {
+            UserDto userDto = userMapper.toUserDto(currentUser.get());
             return ResponseEntity.ok(userDto);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+    }
+    
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        return ResponseEntity.ok().build();
     }
 }
