@@ -23,8 +23,7 @@ public class Task {
     @Column(nullable = false)
     private String description;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(nullable = false)
+    @Enumerated(EnumType.STRING)
     private TaskStatus taskStatus;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -50,19 +50,6 @@ class TaskController {
         return  ResponseEntity.ok(task);
     }
 
-    @GetMapping("/{taskId}")
-    public ResponseEntity<Task> getById(@PathVariable("taskId") int taskId) {
-        User currentUser = getCurrentUser();
-        if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        Task task = taskService.getTaskById(taskId, currentUser);
-        if (task == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(task);
-    }
-
     @PostMapping("/{taskId}/taskstep")
     public ResponseEntity<Task> post(@PathVariable("taskId") int taskId,
                                      @RequestBody TaskStepDto taskStepDto) {
@@ -80,11 +67,25 @@ class TaskController {
     @GetMapping()
     public ResponseEntity<List<Task>> getAllTasks() {
         User currentUser = getCurrentUser();
+        System.out.println(currentUser);
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         List<Task> tasks = taskService.getAllTasksByUser(currentUser);
         return ResponseEntity.ok(tasks);
+    }
+
+    @GetMapping("/{taskId}")
+    public ResponseEntity<Task> getById(@PathVariable("taskId") int taskId) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        Task task = taskService.getTaskById(taskId, currentUser);
+        if (task == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(task);
     }
 
     @GetMapping(value = "/export", produces = "text/csv")

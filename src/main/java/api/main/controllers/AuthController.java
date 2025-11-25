@@ -42,7 +42,6 @@ class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> login(@RequestBody LoginRequestDto requestDto) {
         Optional<User> authenticatedUser = authService.authenticateUser(requestDto.email(), requestDto.password());
-        
         if (authenticatedUser.isPresent()) {
             User user = authenticatedUser.get();
             String token = authService.generateTokenForUser(user);

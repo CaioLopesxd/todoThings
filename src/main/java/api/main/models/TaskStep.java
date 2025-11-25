@@ -18,15 +18,22 @@ public class TaskStep {
     @Column
     private String description;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(nullable = false)
-    private TaskStatus taskStatus;
+    public TaskStatus getStepStatus() {
+        return stepStatus;
+    }
+
+    public void setStepStatus(TaskStatus stepStatus) {
+        this.stepStatus = stepStatus;
+    }
+
+    @Enumerated(EnumType.STRING)
+    private TaskStatus stepStatus;
 
     public TaskStep() {}
-    public TaskStep(Task task, String description, TaskStatus taskStatus) {
+    public TaskStep(Task task, String description, TaskStatus stepStatus) {
         this.task = task;
         this.description = description;
-        this.taskStatus = taskStatus;
+        this.stepStatus = stepStatus;
     }
 
     public String getDescription() {
@@ -51,13 +58,5 @@ public class TaskStep {
 
     public void setTask(Task task) {
         this.task = task;
-    }
-
-    public TaskStatus getTaskStatus() {
-        return taskStatus;
-    }
-
-    public void setTaskStatus(TaskStatus taskStatus) {
-        this.taskStatus = taskStatus;
     }
 }
