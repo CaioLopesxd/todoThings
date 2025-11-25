@@ -1,7 +1,8 @@
 package api.main.controllers;
 
-import api.main.dtos.task.TaskDto;
+import api.main.dtos.task.CreateTaskDto;
 import api.main.dtos.task.TaskStepDto;
+import api.main.dtos.task.UpdateTaskDto;
 import api.main.models.Task;
 import api.main.models.TaskStep;
 import api.main.models.User;
@@ -41,12 +42,12 @@ class TaskController {
     }
 
     @PostMapping()
-    public ResponseEntity<Task> post(@RequestBody TaskDto taskDto) {
+    public ResponseEntity<Task> post(@RequestBody CreateTaskDto createTaskDto) {
         User currentUser = getCurrentUser();
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        Task task = taskService.createTask(taskDto, currentUser);
+        Task task = taskService.createTask(createTaskDto, currentUser);
         return  ResponseEntity.ok(task);
     }
 
@@ -58,6 +59,7 @@ class TaskController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         Task task = taskService.createTaskStep(taskId, taskStepDto, currentUser);
+
         if (task == null) {
             return ResponseEntity.notFound().build();
         }
@@ -67,10 +69,10 @@ class TaskController {
     @GetMapping()
     public ResponseEntity<List<Task>> getAllTasks() {
         User currentUser = getCurrentUser();
-        System.out.println(currentUser);
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+
         List<Task> tasks = taskService.getAllTasksByUser(currentUser);
         return ResponseEntity.ok(tasks);
     }
@@ -81,10 +83,9 @@ class TaskController {
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+
         Task task = taskService.getTaskById(taskId, currentUser);
-        if (task == null) {
-            return ResponseEntity.notFound().build();
-        }
+
         return ResponseEntity.ok(task);
     }
 
@@ -130,5 +131,24 @@ class TaskController {
                 .contentLength(resource.contentLength())
                 .body(resource);
     }
+
+    @PutMapping("/{taskId}")
+    public ResponseEntity<Task> putTask(@PathVariable("taskId")int taskId,@RequestBody UpdateTaskDto updateTaskDto) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) { return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();}
+
+        Task task = taskService.updateTask(taskId, updateTaskDto ,currentUser);
+        return ResponseEntity.ok(task);
+    }
+
+    @DeleteMapping("/{taskId}")
+    public ResponseEntity<String> putTask(@PathVariable("taskId")int taskId) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) { return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();}
+
+        taskService.deleteTask(taskId, currentUser);
+        return ResponseEntity.ok("Deletado com sucesso");
+    }
+
 
 }

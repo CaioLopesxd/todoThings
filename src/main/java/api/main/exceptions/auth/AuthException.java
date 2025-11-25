@@ -1,7 +1,7 @@
 package api.main.exceptions.auth;
 
 public class AuthException extends RuntimeException {
-    public AuthException(String message) {
-        super(message);
+    public AuthException() {
+        super("Task não encontrada ou não pertence ao usuário");
     }
 }
