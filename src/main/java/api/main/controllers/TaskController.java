@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -24,12 +23,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-@Controller
+@RestController
 @RequestMapping("/api/task")
-class TaskController {
+public class TaskController {
     TaskService taskService;
 
     public TaskController(TaskService _taskService) {
@@ -37,8 +35,7 @@ class TaskController {
     }
 
     private User getCurrentUser() {
-        Optional<User> currentUser = SecurityUtils.getCurrentUser();
-        return currentUser.orElse(null);
+        return SecurityUtils.getCurrentUser();
     }
 
     @PostMapping()
@@ -55,9 +52,7 @@ class TaskController {
     public ResponseEntity<Task> post(@PathVariable("taskId") int taskId,
                                      @RequestBody TaskStepDto taskStepDto) {
         User currentUser = getCurrentUser();
-        if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+
         Task task = taskService.createTaskStep(taskId, taskStepDto, currentUser);
 
         if (task == null) {
@@ -69,10 +64,6 @@ class TaskController {
     @GetMapping()
     public ResponseEntity<List<Task>> getAllTasks() {
         User currentUser = getCurrentUser();
-        if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
         List<Task> tasks = taskService.getAllTasksByUser(currentUser);
         return ResponseEntity.ok(tasks);
     }
@@ -80,22 +71,14 @@ class TaskController {
     @GetMapping("/{taskId}")
     public ResponseEntity<Task> getById(@PathVariable("taskId") int taskId) {
         User currentUser = getCurrentUser();
-        if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
 
         Task task = taskService.getTaskById(taskId, currentUser);
-
         return ResponseEntity.ok(task);
     }
 
     @GetMapping(value = "/export", produces = "text/csv")
     public ResponseEntity<Resource> exportTasksCsv() throws IOException {
         User currentUser = getCurrentUser();
-        if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
         List<Task> tasks = taskService.getAllTasksByUser(currentUser);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -135,8 +118,6 @@ class TaskController {
     @PutMapping("/{taskId}")
     public ResponseEntity<Task> putTask(@PathVariable("taskId")int taskId,@RequestBody UpdateTaskDto updateTaskDto) {
         User currentUser = getCurrentUser();
-        if (currentUser == null) { return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();}
-
         Task task = taskService.updateTask(taskId, updateTaskDto ,currentUser);
         return ResponseEntity.ok(task);
     }
@@ -144,8 +125,6 @@ class TaskController {
     @DeleteMapping("/{taskId}")
     public ResponseEntity<String> putTask(@PathVariable("taskId")int taskId) {
         User currentUser = getCurrentUser();
-        if (currentUser == null) { return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();}
-
         taskService.deleteTask(taskId, currentUser);
         return ResponseEntity.ok("Deletado com sucesso");
     }

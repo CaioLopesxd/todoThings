@@ -66,6 +66,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Token inválido ou expirado");
+            return;
         }
         
         filterChain.doFilter(request, response);

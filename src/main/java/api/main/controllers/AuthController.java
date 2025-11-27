@@ -12,11 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
-
 @RestController
 @RequestMapping("/api/auth")
-class AuthController {
+public class AuthController {
     private final AuthService authService;
     private final UserMapper userMapper;
 
@@ -41,28 +39,18 @@ class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> login(@RequestBody LoginRequestDto requestDto) {
-        Optional<User> authenticatedUser = authService.authenticateUser(requestDto.email(), requestDto.password());
-        if (authenticatedUser.isPresent()) {
-            User user = authenticatedUser.get();
-            String token = authService.generateTokenForUser(user);
-            UserDto userDto = userMapper.toUserDto(user);
-            AuthResponseDto response = new AuthResponseDto(token, userDto);
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        User user = authService.authenticateUser(requestDto.email(), requestDto.password());
+        String token = authService.generateTokenForUser(user);
+        UserDto userDto = userMapper.toUserDto(user);
+        AuthResponseDto response = new AuthResponseDto(token, userDto);
+        return ResponseEntity.ok(response);
+
     }
     
     @GetMapping("/me")
     public ResponseEntity<UserDto> getCurrentUser() {
-        Optional<User> currentUser = SecurityUtils.getCurrentUser();
-        
-        if (currentUser.isPresent()) {
-            UserDto userDto = userMapper.toUserDto(currentUser.get());
-            return ResponseEntity.ok(userDto);
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        User currentUser = SecurityUtils.getCurrentUser();
+        return ResponseEntity.ok(userMapper.toUserDto(currentUser));
     }
     
     @PostMapping("/logout")

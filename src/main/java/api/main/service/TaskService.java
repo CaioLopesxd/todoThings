@@ -3,14 +3,13 @@ package api.main.service;
 import api.main.dtos.task.CreateTaskDto;
 import api.main.dtos.task.TaskStepDto;
 import api.main.dtos.task.UpdateTaskDto;
-import api.main.exceptions.auth.AuthException;
+import api.main.exceptions.task.UserNotOwnerOfTask;
 import api.main.models.Task;
 import api.main.models.TaskStatus;
 import api.main.models.TaskStep;
 import api.main.models.User;
 import api.main.repositories.TaskRepository;
 import api.main.repositories.TaskStepRepository;
-import org.hibernate.sql.Update;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -55,7 +54,7 @@ public class TaskService {
 
     public Task getTaskById(int taskId, User user) {
         return taskRepository.findByIdAndUser(taskId, user)
-                .orElseThrow(AuthException::new);
+                .orElseThrow(UserNotOwnerOfTask::new);
     }
     
     public List<Task> getAllTasksByUser(User user) {
@@ -64,7 +63,7 @@ public class TaskService {
 
     public Task updateTask(int id, UpdateTaskDto updateTaskDto, User user) {
         Task task = taskRepository.findByIdAndUser(id, user)
-                .orElseThrow(AuthException::new);
+                .orElseThrow(UserNotOwnerOfTask::new); ;
 
         if (updateTaskDto.title() != null) {
             task.setTitle(updateTaskDto.title());
@@ -83,7 +82,7 @@ public class TaskService {
 
     public void deleteTask(int id, User user) {
         Task task = taskRepository.findByIdAndUser(id, user)
-                .orElseThrow(AuthException::new);
+                .orElseThrow(UserNotOwnerOfTask::new); ;
 
         taskRepository.delete(task);
     }
