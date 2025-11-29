@@ -38,7 +38,7 @@ public class AuthService {
 
     public User authenticateUser(String email, String password) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(EmailOrPasswordError::new);
+                .orElseThrow(UserNotFound::new);
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new EmailOrPasswordError();

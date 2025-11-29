@@ -3,9 +3,11 @@ import api.main.exceptions.auth.ContactAlreadyExists;
 import api.main.exceptions.auth.EmailOrPasswordError;
 import api.main.exceptions.auth.UserNotAuthenticated;
 import api.main.exceptions.auth.UserNotFound;
+import api.main.exceptions.task.TaskStepNotFound;
 import api.main.exceptions.task.UserAlreadyAssignToTask;
 import api.main.exceptions.task.UserNotAssignedToTask;
 import api.main.exceptions.task.UserNotOwnerOfTask;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -59,6 +61,10 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     private ResponseEntity<Object> userAlreadyAssignToTaskHandler(UserAlreadyAssignToTask exception){
         return buildErrorResponse(exception.getMessage(), HttpStatus.BAD_REQUEST);
     }
+    @ExceptionHandler(TaskStepNotFound.class)
+    private ResponseEntity<Object> taskStepNotFoundHandler(TaskStepNotFound exception){
+        return buildErrorResponse(exception.getMessage(), HttpStatus.BAD_REQUEST);
+    }
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
@@ -95,6 +101,40 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         body.put("status", status.value());
 
         return ResponseEntity.status(status).body(body);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(
+            org.springframework.http.converter.HttpMessageNotReadableException ex,
+            HttpHeaders headers,
+            HttpStatusCode status,
+            WebRequest request) {
+
+        String message = "Requisição mal formatada";
+
+        if (ex.getCause() instanceof InvalidFormatException invalidFormatException) {
+            Class<?> targetType = invalidFormatException.getTargetType();
+            if (targetType != null && targetType.isEnum()) {
+                String invalidValue = invalidFormatException.getValue().toString();
+                Object[] acceptedValues = targetType.getEnumConstants();
+                message = String.format(
+                        "Valor '%s' inválido. Valores aceitos: %s",
+                        invalidValue,
+                        java.util.Arrays.toString(
+                                java.util.Arrays.stream(acceptedValues)
+                                        .map(Object::toString)
+                                        .toArray()
+                        )
+                );
+            }
+        }
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("message", message);
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 }
 

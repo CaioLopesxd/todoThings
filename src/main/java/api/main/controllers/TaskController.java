@@ -4,6 +4,7 @@ import api.main.dtos.auth.NewContactDto;
 import api.main.dtos.task.CreateTaskDto;
 import api.main.dtos.task.TaskStepDto;
 import api.main.dtos.task.UpdateTaskDto;
+import api.main.dtos.task.UpdateTaskStepDto;
 import api.main.models.Task;
 import api.main.models.TaskStep;
 import api.main.models.User;
@@ -46,14 +47,6 @@ public class TaskController {
         return  ResponseEntity.ok(task);
     }
 
-    @PostMapping("/{taskId}/taskstep")
-    public ResponseEntity<Task> post(@PathVariable("taskId") int taskId,
-                                     @RequestBody @Valid TaskStepDto taskStepDto) {
-        User currentUser = getCurrentUser();
-        Task task = taskService.createTaskStep(taskId, taskStepDto, currentUser);
-        return ResponseEntity.ok(task);
-    }
-
     @GetMapping()
     public ResponseEntity<List<Task>> getAllTasks() {
         User currentUser = getCurrentUser();
@@ -75,7 +68,7 @@ public class TaskController {
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (CSVPrinter csvPrinter = new CSVPrinter(
-                new OutputStreamWriter(out, StandardCharsets.ISO_8859_1),
+                new OutputStreamWriter(out, StandardCharsets.UTF_8),
                 CSVFormat.EXCEL.builder().setHeader("Id", "Titulo", "Descrição", "Passos").build()
         )) {
 
@@ -138,7 +131,27 @@ public class TaskController {
         return ResponseEntity.ok(task);
     }
 
+    @PostMapping("/{taskId}/taskstep")
+    public ResponseEntity<Task> post(@PathVariable("taskId") int taskId,
+                                     @RequestBody @Valid TaskStepDto taskStepDto) {
+        User currentUser = getCurrentUser();
+        Task task = taskService.createTaskStep(taskId, taskStepDto, currentUser);
+        return ResponseEntity.ok(task);
+    }
 
+    @PatchMapping("/{taskId}/taskstep/{taskStepId}")
+    public ResponseEntity<Task> patch(@PathVariable("taskId") int taskId,
+                                      @PathVariable("taskStepId") int taskStepId,
+                                      @RequestBody UpdateTaskStepDto updateTaskStepDto) {
+        User currentUser = getCurrentUser();
+        Task task = taskService.updateTaskStep(taskId, taskStepId, updateTaskStepDto, currentUser);
+        return ResponseEntity.ok(task);
+    }
 
-
+    @DeleteMapping("/{taskId}/taskstep/{taskStepId}")
+    public ResponseEntity<Task> deleteTaskStep(@PathVariable("taskId") int taskId, @PathVariable("taskStepId") int taskStepId) {
+        User currentUser = getCurrentUser();
+        taskService.deleteTaskStep(taskId, taskStepId, currentUser);
+        return ResponseEntity.ok().build();
+    }
 }

@@ -60,6 +60,6 @@ public class AuthController {
     @PostMapping("/contact")
     public ResponseEntity<User> addNewContact(@RequestBody @Valid NewContactDto newContactDto) {
         User ownerContact = authService.addContact(SecurityUtils.getCurrentUser(), newContactDto);
-        return ResponseEntity.ok(ownerContact);
+        return ResponseEntity.ok(ownerContact.getContacts().get(ownerContact.getContacts().size()-1));
     }
 }

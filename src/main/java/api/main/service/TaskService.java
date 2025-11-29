@@ -3,7 +3,9 @@ package api.main.service;
 import api.main.dtos.task.CreateTaskDto;
 import api.main.dtos.task.TaskStepDto;
 import api.main.dtos.task.UpdateTaskDto;
+import api.main.dtos.task.UpdateTaskStepDto;
 import api.main.exceptions.auth.UserNotFound;
+import api.main.exceptions.task.TaskStepNotFound;
 import api.main.exceptions.task.UserAlreadyAssignToTask;
 import api.main.exceptions.task.UserNotOwnerOfTask;
 import api.main.exceptions.task.UserNotAssignedToTask;
@@ -26,7 +28,8 @@ public class TaskService {
     private final UserRepository userRepository;
 
     public TaskService(TaskRepository _taskRepository,
-                       TaskStepRepository _taskStepRepository, UserRepository userRepository) {
+                       TaskStepRepository _taskStepRepository,
+                       UserRepository userRepository) {
         this.taskRepository = _taskRepository;
         this.taskStepRepository = _taskStepRepository;
         this.userRepository = userRepository;
@@ -37,39 +40,23 @@ public class TaskService {
                              createTaskDto.description(),
                              TaskStatus.PENDENTE,
                              taskOwner);
+        task.getAssignedUsers().add(taskOwner);
 
         return taskRepository.save(task);
     }
-    
-    public Task createTaskStep(int taskId, TaskStepDto taskStepDto, User user) {
-        Optional<Task> taskOptional = taskRepository.findById(taskId);
-        if (taskOptional.isEmpty()) {
-            return null;
-        }
-        
-        Task task = taskOptional.get();
-        if (!task.getTaskOwner().getId().equals(user.getId())) {
-            return null;
-        }
-        
-        TaskStep taskStep = new TaskStep(task, taskStepDto.description(), TaskStatus.PENDENTE);
-        taskStepRepository.save(taskStep);
-
-        return task;
-    }
 
     public Task getTaskById(int taskId, User user) {
-        return taskRepository.findByIdAndTaskOwner(taskId, user)
-                .orElseThrow(UserNotOwnerOfTask::new);
+        return taskRepository.findByIdAndAssignedUsersContains(taskId, user)
+                .orElseThrow(UserNotAssignedToTask::new);
     }
     
     public List<Task> getAllTasksByUser(User user) {
-        return taskRepository.findByTaskOwner(user);
+        return taskRepository.findByAssignedUsersContains(user);
     }
 
-    public Task updateTask(int id, UpdateTaskDto updateTaskDto, User user) {
-        Task task = taskRepository.findByIdAndTaskOwner(id, user)
-                .orElseThrow(UserNotOwnerOfTask::new); ;
+    public Task updateTask(int id, UpdateTaskDto updateTaskDto, User owner) {
+        Task task = taskRepository.findByIdAndTaskOwner(id, owner)
+                .orElseThrow(UserNotOwnerOfTask::new);
 
         if (updateTaskDto.title() != null) {
             task.setTitle(updateTaskDto.title());
@@ -88,7 +75,7 @@ public class TaskService {
 
     public void deleteTask(int id, User user) {
         Task task = taskRepository.findByIdAndTaskOwner(id, user)
-                .orElseThrow(UserNotOwnerOfTask::new); ;
+                .orElseThrow(UserNotOwnerOfTask::new);
 
         taskRepository.delete(task);
     }
@@ -127,6 +114,47 @@ public class TaskService {
         task.getAssignedUsers().remove(contact);
 
         return taskRepository.save(task);
+    }
+    public Task createTaskStep(int taskId, TaskStepDto taskStepDto, User user) {
+        Task task = taskRepository.findByIdAndTaskOwner(taskId,user).orElseThrow(UserNotOwnerOfTask::new);
+
+        TaskStep taskStep = new TaskStep(task, taskStepDto.description(), TaskStatus.PENDENTE);
+        taskStepRepository.save(taskStep);
+
+        return task;
+    }
+
+    public Task updateTaskStep(int taskId, int stepId, UpdateTaskStepDto dto, User user) {
+
+        Task task = taskRepository.findByIdAndAssignedUsersContains(taskId, user)
+                .orElseThrow(UserNotAssignedToTask::new);
+
+        TaskStep taskStep = taskStepRepository.findByIdAndTaskId(stepId, taskId)
+                .orElseThrow(TaskStepNotFound::new);
+
+        if (dto.description() != null) {
+            taskStep.setDescription(dto.description());
+        }
+
+        if (dto.taskStatus() != null) {
+            taskStep.setStepStatus(dto.taskStatus());
+        }
+
+        return taskRepository.save(task);
+    }
+
+
+    public void deleteTaskStep(int taskId, int stepId, User user) {
+
+        Task task = taskRepository.findByIdAndTaskOwner(taskId, user)
+                .orElseThrow(UserNotOwnerOfTask::new);
+
+        TaskStep step = taskStepRepository.findByIdAndTaskId(stepId,taskId)
+                .orElseThrow();
+
+        task.getTaskSteps().remove(step);
+
+        taskRepository.save(task);
     }
 
 
