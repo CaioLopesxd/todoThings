@@ -15,7 +15,7 @@ public class Task {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(nullable = false)
-    private User user;
+    private User taskOwner;
 
     @Column(nullable = false)
     private String title;
@@ -35,6 +35,12 @@ public class Task {
         this.title = title;
         this.description = description;
         this.taskStatus = taskStatus;
+    }
+    public Task(String title, String description, TaskStatus taskStatus, User taskOwner) {
+        this.title = title;
+        this.description = description;
+        this.taskStatus = taskStatus;
+        this.taskOwner = taskOwner;
     }
 
     public String getDescription() {
@@ -57,16 +63,16 @@ public class Task {
         return title;
     }
 
+    public User getTaskOwner() {
+        return taskOwner;
+    }
+
+    public void setTaskOwner(User taskOwner) {
+        this.taskOwner = taskOwner;
+    }
+
     public void setTitle(String title) {
         this.title = title;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
     }
 
     public TaskStatus getTaskStatus() {

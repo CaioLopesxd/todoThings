@@ -1,10 +1,15 @@
 package api.main.service;
 
+import api.main.dtos.auth.NewContactDto;
+import api.main.exceptions.auth.ContactAlreadyExists;
 import api.main.exceptions.auth.EmailOrPasswordError;
 import api.main.models.User;
 import api.main.repositories.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -23,6 +28,12 @@ public class AuthService {
         return userRepository.save(user);
     }
 
+    @Transactional(readOnly = true)
+    public User getAuthenticatedUser(UUID id) {
+        return userRepository.findById(id).orElseThrow();
+    }
+
+
     public User authenticateUser(String email, String password) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(EmailOrPasswordError::new);
@@ -34,8 +45,18 @@ public class AuthService {
         return user;
     }
 
-
     public String generateTokenForUser(User user) {
         return jwtService.generateToken(user.getId());
+    }
+
+    public User addContact(User _owner, NewContactDto newContactDto){
+        User owner = userRepository.findById(_owner.getId()).orElseThrow();
+        User contact = userRepository.findByEmail(newContactDto.email()).orElseThrow();
+
+        if(userRepository.existsByIdAndContacts_Id(owner.getId(),contact.getId()))
+            throw new ContactAlreadyExists();
+
+        owner.getContacts().add(contact);
+        return userRepository.save(owner);
     }
 }

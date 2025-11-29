@@ -26,11 +26,11 @@ public class TaskService {
         this.taskStepRepository = _taskStepRepository;
     }
     
-    public Task createTask(CreateTaskDto createTaskDto, User user) {
+    public Task createTask(CreateTaskDto createTaskDto, User taskOwner) {
         Task task = new Task(createTaskDto.title(),
                              createTaskDto.description(),
-                             TaskStatus.PENDENTE);
-        task.setUser(user);
+                             TaskStatus.PENDENTE,
+                             taskOwner);
 
         return taskRepository.save(task);
     }
@@ -42,7 +42,7 @@ public class TaskService {
         }
         
         Task task = taskOptional.get();
-        if (!task.getUser().getId().equals(user.getId())) {
+        if (!task.getTaskOwner().getId().equals(user.getId())) {
             return null;
         }
         
@@ -53,16 +53,16 @@ public class TaskService {
     }
 
     public Task getTaskById(int taskId, User user) {
-        return taskRepository.findByIdAndUser(taskId, user)
+        return taskRepository.findByIdAndTaskOwner(taskId, user)
                 .orElseThrow(UserNotOwnerOfTask::new);
     }
     
     public List<Task> getAllTasksByUser(User user) {
-        return taskRepository.findByUser(user);
+        return taskRepository.findByTaskOwner(user);
     }
 
     public Task updateTask(int id, UpdateTaskDto updateTaskDto, User user) {
-        Task task = taskRepository.findByIdAndUser(id, user)
+        Task task = taskRepository.findByIdAndTaskOwner(id, user)
                 .orElseThrow(UserNotOwnerOfTask::new); ;
 
         if (updateTaskDto.title() != null) {
@@ -81,7 +81,7 @@ public class TaskService {
     }
 
     public void deleteTask(int id, User user) {
-        Task task = taskRepository.findByIdAndUser(id, user)
+        Task task = taskRepository.findByIdAndTaskOwner(id, user)
                 .orElseThrow(UserNotOwnerOfTask::new); ;
 
         taskRepository.delete(task);

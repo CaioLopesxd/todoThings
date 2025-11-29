@@ -1,4 +1,5 @@
 package api.main.util;
+import api.main.exceptions.auth.ContactAlreadyExists;
 import api.main.exceptions.auth.EmailOrPasswordError;
 import api.main.exceptions.auth.UserNotAuthenticated;
 import api.main.exceptions.task.UserNotOwnerOfTask;
@@ -36,6 +37,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return buildErrorResponse(exception.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(ContactAlreadyExists.class)
+    private ResponseEntity<Object> contactAlreadyExistsHandler(ContactAlreadyExists exception){
+        return buildErrorResponse(exception.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex,
@@ -53,10 +59,10 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 ));
 
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("message", "Erro de validação nos campos");
+        String message = fieldErrors.values().stream().findFirst().orElse("Erro");
+        body.put("message", message);
         body.put("timestamp", LocalDateTime.now().toString());
         body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("errors", fieldErrors);
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)

@@ -1,19 +1,17 @@
 package api.main.controllers;
 
-import api.main.dtos.auth.AuthResponseDto;
-import api.main.dtos.auth.LoginRequestDto;
-import api.main.dtos.auth.RegisterRequestDto;
-import api.main.dtos.auth.UserDto;
+import api.main.dtos.auth.*;
 import api.main.mappers.auth.UserMapper;
 import api.main.models.User;
 import api.main.service.AuthService;
 import api.main.util.SecurityUtils;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api")
 public class AuthController {
     private final AuthService authService;
     private final UserMapper userMapper;
@@ -23,8 +21,8 @@ public class AuthController {
         this.userMapper = new UserMapper();
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<AuthResponseDto> register(@RequestBody RegisterRequestDto requestDto) {
+    @PostMapping("/auth/register")
+    public ResponseEntity<AuthResponseDto> register(@RequestBody @Valid RegisterRequestDto requestDto) {
         try {
             User user = userMapper.toUser(requestDto);
             User savedUser = authService.createUser(user);
@@ -37,8 +35,8 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<AuthResponseDto> login(@RequestBody LoginRequestDto requestDto) {
+    @PostMapping("/auth/login")
+    public ResponseEntity<AuthResponseDto> login(@RequestBody @Valid LoginRequestDto requestDto) {
         User user = authService.authenticateUser(requestDto.email(), requestDto.password());
         String token = authService.generateTokenForUser(user);
         UserDto userDto = userMapper.toUserDto(user);
@@ -49,12 +47,19 @@ public class AuthController {
     
     @GetMapping("/me")
     public ResponseEntity<UserDto> getCurrentUser() {
-        User currentUser = SecurityUtils.getCurrentUser();
-        return ResponseEntity.ok(userMapper.toUserDto(currentUser));
+        User current = authService.getAuthenticatedUser(SecurityUtils.getCurrentUser().getId());
+        return ResponseEntity.ok(userMapper.toUserDto(current));
+
     }
-    
+
     @PostMapping("/logout")
     public ResponseEntity<Void> logout() {
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/contact")
+    public ResponseEntity<User> addNewContact(@RequestBody @Valid NewContactDto newContactDto) {
+        User ownerContact = authService.addContact(SecurityUtils.getCurrentUser(), newContactDto);
+        return ResponseEntity.ok(ownerContact);
     }
 }

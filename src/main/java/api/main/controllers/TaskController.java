@@ -47,14 +47,9 @@ public class TaskController {
 
     @PostMapping("/{taskId}/taskstep")
     public ResponseEntity<Task> post(@PathVariable("taskId") int taskId,
-                                     @RequestBody TaskStepDto taskStepDto) {
+                                     @RequestBody @Valid TaskStepDto taskStepDto) {
         User currentUser = getCurrentUser();
-
         Task task = taskService.createTaskStep(taskId, taskStepDto, currentUser);
-
-        if (task == null) {
-            return ResponseEntity.notFound().build();
-        }
         return ResponseEntity.ok(task);
     }
 
@@ -68,7 +63,6 @@ public class TaskController {
     @GetMapping("/{taskId}")
     public ResponseEntity<Task> getById(@PathVariable("taskId") int taskId) {
         User currentUser = getCurrentUser();
-
         Task task = taskService.getTaskById(taskId, currentUser);
         return ResponseEntity.ok(task);
     }
@@ -112,15 +106,15 @@ public class TaskController {
                 .body(resource);
     }
 
-    @PutMapping("/{taskId}")
-    public ResponseEntity<Task> putTask(@PathVariable("taskId")int taskId,@RequestBody UpdateTaskDto updateTaskDto) {
+    @PatchMapping("/{taskId}")
+    public ResponseEntity<Task> putTask(@PathVariable("taskId")int taskId,@RequestBody  UpdateTaskDto updateTaskDto) {
         User currentUser = getCurrentUser();
         Task task = taskService.updateTask(taskId, updateTaskDto ,currentUser);
         return ResponseEntity.ok(task);
     }
 
     @DeleteMapping("/{taskId}")
-    public ResponseEntity<String> putTask(@PathVariable("taskId")int taskId) {
+    public ResponseEntity<String> putTask(@PathVariable("taskId") int taskId) {
         User currentUser = getCurrentUser();
         taskService.deleteTask(taskId, currentUser);
         return ResponseEntity.ok("Deletado com sucesso");
