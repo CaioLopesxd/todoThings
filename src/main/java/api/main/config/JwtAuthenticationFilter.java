@@ -3,10 +3,12 @@ package api.main.config;
 import api.main.models.User;
 import api.main.repositories.UserRepository;
 import api.main.service.JwtService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,9 +17,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -66,11 +67,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Token inválido ou expirado");
-            return;
-        }
-        
-        filterChain.doFilter(request, response);
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+
+                Map<String, Object> body = new LinkedHashMap<>();
+                body.put("message", "Token inválido ou expirado");
+                body.put("timestamp", LocalDateTime.now().toString());
+                body.put("status", 401);
+
+                String json = new ObjectMapper().writeValueAsString(body);
+                response.getWriter().write(json);
+                return;
+            }
+
+
+            filterChain.doFilter(request, response);
     }
 }

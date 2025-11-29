@@ -15,12 +15,12 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,11 +39,8 @@ public class TaskController {
     }
 
     @PostMapping()
-    public ResponseEntity<Task> post(@RequestBody CreateTaskDto createTaskDto) {
+    public ResponseEntity<Task> post(@RequestBody @Valid CreateTaskDto createTaskDto) {
         User currentUser = getCurrentUser();
-        if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
         Task task = taskService.createTask(createTaskDto, currentUser);
         return  ResponseEntity.ok(task);
     }
