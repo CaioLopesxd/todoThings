@@ -3,6 +3,8 @@ package api.main.service;
 import api.main.dtos.auth.NewContactDto;
 import api.main.exceptions.auth.ContactAlreadyExists;
 import api.main.exceptions.auth.EmailOrPasswordError;
+import api.main.exceptions.auth.UserNotAuthenticated;
+import api.main.exceptions.auth.UserNotFound;
 import api.main.models.User;
 import api.main.repositories.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -50,8 +52,8 @@ public class AuthService {
     }
 
     public User addContact(User _owner, NewContactDto newContactDto){
-        User owner = userRepository.findById(_owner.getId()).orElseThrow();
-        User contact = userRepository.findByEmail(newContactDto.email()).orElseThrow();
+        User owner = userRepository.findById(_owner.getId()).orElseThrow(UserNotAuthenticated::new);
+        User contact = userRepository.findByEmail(newContactDto.email()).orElseThrow(UserNotFound::new);
 
         if(userRepository.existsByIdAndContacts_Id(owner.getId(),contact.getId()))
             throw new ContactAlreadyExists();

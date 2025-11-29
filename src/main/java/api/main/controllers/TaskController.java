@@ -1,5 +1,6 @@
 package api.main.controllers;
 
+import api.main.dtos.auth.NewContactDto;
 import api.main.dtos.task.CreateTaskDto;
 import api.main.dtos.task.TaskStepDto;
 import api.main.dtos.task.UpdateTaskDto;
@@ -119,6 +120,25 @@ public class TaskController {
         taskService.deleteTask(taskId, currentUser);
         return ResponseEntity.ok("Deletado com sucesso");
     }
+
+    @PostMapping("/{taskId}/assignuser")
+    public ResponseEntity<Task> postAssignUserToTask(@PathVariable("taskId") int taskId,@RequestBody @Valid NewContactDto newContactDto) {
+        User currentUser = getCurrentUser();
+        Task task = taskService.assignContactToTask(taskId, newContactDto.email(), currentUser);
+        return ResponseEntity.ok(task);
+    }
+
+    @DeleteMapping("/{taskId}/assignuser")
+    public ResponseEntity<Task> deleteAssignedUserFromTask(
+            @PathVariable("taskId") int taskId,
+            @RequestBody @Valid NewContactDto newContactDto) {
+
+        User currentUser = getCurrentUser();
+        Task task = taskService.removeContactFromTask(taskId, newContactDto.email(), currentUser);
+        return ResponseEntity.ok(task);
+    }
+
+
 
 
 }

@@ -2,6 +2,9 @@ package api.main.util;
 import api.main.exceptions.auth.ContactAlreadyExists;
 import api.main.exceptions.auth.EmailOrPasswordError;
 import api.main.exceptions.auth.UserNotAuthenticated;
+import api.main.exceptions.auth.UserNotFound;
+import api.main.exceptions.task.UserAlreadyAssignToTask;
+import api.main.exceptions.task.UserNotAssignedToTask;
 import api.main.exceptions.task.UserNotOwnerOfTask;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -39,6 +42,21 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ContactAlreadyExists.class)
     private ResponseEntity<Object> contactAlreadyExistsHandler(ContactAlreadyExists exception){
+        return buildErrorResponse(exception.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(UserNotFound.class)
+    private ResponseEntity<Object> userNotFoundHandler(UserNotFound exception){
+        return buildErrorResponse(exception.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(UserNotAssignedToTask.class)
+    private ResponseEntity<Object> userNotAssignedToTaskHandler(UserNotAssignedToTask exception){
+        return buildErrorResponse(exception.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(UserAlreadyAssignToTask.class)
+    private ResponseEntity<Object> userAlreadyAssignToTaskHandler(UserAlreadyAssignToTask exception){
         return buildErrorResponse(exception.getMessage(), HttpStatus.BAD_REQUEST);
     }
 

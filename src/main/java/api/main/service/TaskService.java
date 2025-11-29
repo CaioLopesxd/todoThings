@@ -3,13 +3,17 @@ package api.main.service;
 import api.main.dtos.task.CreateTaskDto;
 import api.main.dtos.task.TaskStepDto;
 import api.main.dtos.task.UpdateTaskDto;
+import api.main.exceptions.auth.UserNotFound;
+import api.main.exceptions.task.UserAlreadyAssignToTask;
 import api.main.exceptions.task.UserNotOwnerOfTask;
+import api.main.exceptions.task.UserNotAssignedToTask;
 import api.main.models.Task;
 import api.main.models.TaskStatus;
 import api.main.models.TaskStep;
 import api.main.models.User;
 import api.main.repositories.TaskRepository;
 import api.main.repositories.TaskStepRepository;
+import api.main.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,11 +23,13 @@ import java.util.Optional;
 public class TaskService {
     private final TaskRepository taskRepository;
     private final TaskStepRepository taskStepRepository;
+    private final UserRepository userRepository;
 
     public TaskService(TaskRepository _taskRepository,
-                       TaskStepRepository _taskStepRepository) {
+                       TaskStepRepository _taskStepRepository, UserRepository userRepository) {
         this.taskRepository = _taskRepository;
         this.taskStepRepository = _taskStepRepository;
+        this.userRepository = userRepository;
     }
     
     public Task createTask(CreateTaskDto createTaskDto, User taskOwner) {
@@ -86,5 +92,42 @@ public class TaskService {
 
         taskRepository.delete(task);
     }
+
+    public Task assignContactToTask(int id, String email, User owner) {
+        Task task = taskRepository.findByIdAndTaskOwner(id, owner)
+                .orElseThrow(UserNotOwnerOfTask::new);
+
+        User contact = userRepository.findByEmail(email)
+                .orElseThrow(UserNotFound::new);
+
+        if (contact.equals(task.getTaskOwner())) {
+            throw new UserAlreadyAssignToTask();
+        }
+
+        if (task.getAssignedUsers().contains(contact)) {
+            throw new UserAlreadyAssignToTask();
+        }
+
+        task.getAssignedUsers().add(contact);
+
+        return taskRepository.save(task);
+    }
+
+    public Task removeContactFromTask(int id, String email, User owner) {
+        Task task = taskRepository.findByIdAndTaskOwner(id, owner)
+                .orElseThrow(UserNotOwnerOfTask::new);
+
+        User contact = userRepository.findByEmail(email)
+                .orElseThrow(UserNotFound::new);
+
+        if (!task.getAssignedUsers().contains(contact)) {
+            throw new UserNotAssignedToTask();
+        }
+
+        task.getAssignedUsers().remove(contact);
+
+        return taskRepository.save(task);
+    }
+
 
 }

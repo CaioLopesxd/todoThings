@@ -30,17 +30,29 @@ public class Task {
     @JsonManagedReference
     private List<TaskStep> taskSteps = new ArrayList<>();
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "task_assigned_users",
+            joinColumns = @JoinColumn(name = "task_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private List<User> assignedUsers = new ArrayList<>();
+
     public Task(){}
-    public Task( String title, String description, TaskStatus taskStatus) {
-        this.title = title;
-        this.description = description;
-        this.taskStatus = taskStatus;
-    }
+
     public Task(String title, String description, TaskStatus taskStatus, User taskOwner) {
         this.title = title;
         this.description = description;
         this.taskStatus = taskStatus;
         this.taskOwner = taskOwner;
+    }
+
+    public List<User> getAssignedUsers() {
+        return assignedUsers;
+    }
+
+    public void setAssignedUsers(List<User> assignedUsers) {
+        this.assignedUsers = assignedUsers;
     }
 
     public String getDescription() {
