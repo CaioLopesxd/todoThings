@@ -42,6 +42,7 @@ Sub-tarefas ou checklist dentro de uma tarefa maior.
 - `task` (Referência à tarefa pai)
 
 ---
+[![dbdiagram.png](./dbdiagram.png)]()
 
 ## 📍 Rotas da API
 
@@ -83,4 +84,4 @@ Sub-tarefas ou checklist dentro de uma tarefa maior.
 
 ### 1. Clonar o repositório
 ```bash
-git clone [https://github.com/CaioLopesxd/todoThings.git](https://github.com/CaioLopesxd/todoThings.git)
+git clone https://github.com/CaioLopesxd/todoThings
