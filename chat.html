@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Teste WebSocket Chat</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .box {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        button.disconnect {
+            background-color: #dc3545;
+        }
+
+        #log {
+            height: 300px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow-y: auto;
+            background: #fff;
+            font-family: monospace;
+        }
+
+        .msg-sent {
+            color: blue;
+        }
+
+        .msg-received {
+            color: green;
+        }
+
+        .sys-msg {
+            color: #888;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>🛠 Teste de Chat WebSocket (Task)</h2>
+
+<div class="box">
+    <h3>1. Conexão</h3>
+    <label>Token JWT:</label>
+    <input type="text" id="tokenInput" placeholder="Cole seu token JWT aqui...">
+
+    <label>ID Task:</label>
+    <input type="number" id="taskIdInput" value="1">
+
+    <br>
+    <button id="btnConnect" onclick="connect()">Conectar</button>
+    <button id="btnDisconnect" class="disconnect" onclick="disconnect()" disabled>Desconectar</button>
+    <span id="status" style="margin-left: 10px; font-weight: bold; color: red;">Desconectado</span>
+</div>
+
+<div class="box">
+    <h3>2. Enviar Mensagem</h3>
+    <label>Conteúdo:</label>
+    <input type="text" id="messageInput" placeholder="Digite a mensagem..."
+           onkeydown="if(event.key === 'Enter') sendMessage()">
+    <button id="btnSend" onclick="sendMessage()" disabled>Enviar</button>
+</div>
+
+<h3>Log de Eventos:</h3>
+<div id="log"></div>
+
+<script>
+    let stompClient = null;
+
+    function log(msg, type = 'sys-msg') {
+        const logDiv = document.getElementById("log");
+        logDiv.innerHTML += `<div class="${type}">${new Date().toLocaleTimeString()} - ${msg}</div>`;
+        logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function setConnected(connected) {
+        document.getElementById("btnConnect").disabled = connected;
+        document.getElementById("btnDisconnect").disabled = !connected;
+        document.getElementById("btnSend").disabled = !connected;
+        document.getElementById("status").innerHTML = connected ? "Conectado 🟢" : "Desconectado 🔴";
+        document.getElementById("status").style.color = connected ? "green" : "red";
+    }
+
+    function connect() {
+        const token = document.getElementById("tokenInput").value;
+        const taskId = document.getElementById("taskIdInput").value;
+
+        if (!token) { alert("Digite um token!"); return; }
+        if (!taskId) { alert("Digite o ID da Task!"); return; }
+
+        log("Tentando conectar...", 'sys-msg');
+
+
+        const socket = new SockJS("http://localhost:8080/ws?token=" + token);
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect(
+            {},
+            function (frame) {
+                setConnected(true);
+                log("Conectado! (" + frame + ")", 'sys-msg');
+
+
+                const topicPath = `/topic/task/${taskId}/chat`;
+
+                log(`Inscrevendo-se em: ${topicPath}`, 'sys-msg');
+
+                stompClient.subscribe(topicPath, function (message) {
+                    const body = JSON.parse(message.body);
+                    log(`RECEBIDO [${body.senderName}]: ${body.content}`, 'msg-received');
+                });
+            },
+            function (error) {
+                setConnected(false);
+                log("Erro na conexão: " + error, 'sys-msg');
+                console.error(error);
+            }
+        );
+    }
+
+    function disconnect() {
+        if (stompClient !== null) {
+            stompClient.disconnect();
+        }
+        setConnected(false);
+        log("Desconectado.", 'sys-msg');
+    }
+
+    function sendMessage() {
+        const taskId = document.getElementById("taskIdInput").value;
+        const content = document.getElementById("messageInput").value;
+
+        if (!content) return;
+
+        const payload = {
+            content: content
+        };
+
+        const destination = `/app/task/${taskId}/chat`;
+
+        stompClient.send(destination, {}, JSON.stringify(payload));
+
+        log(`ENVIADO: ${content}`, 'msg-sent');
+        document.getElementById("messageInput").value = "";
+    }
+</script>
+
+</body>
+
+</html>

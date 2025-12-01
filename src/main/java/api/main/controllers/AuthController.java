@@ -51,6 +51,10 @@ public class AuthController {
         return ResponseEntity.ok(userMapper.toUserDto(current));
 
     }
+    @PatchMapping("/me")
+    public ResponseEntity<UserDto> updateUser(@RequestBody @Valid UpdateUserDto updateUserDto) {
+        return ResponseEntity.ok(authService.updateUser(updateUserDto, SecurityUtils.getCurrentUser()));
+    }
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout() {

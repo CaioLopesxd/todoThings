@@ -4,9 +4,10 @@ import api.main.dtos.auth.ContactDto;
 import api.main.dtos.auth.RegisterRequestDto;
 import api.main.dtos.auth.UserDto;
 import api.main.models.User;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
-
+@Component
 public class UserMapper {
     public User toUser(RegisterRequestDto requestDto) {
         return new User(requestDto.name(), requestDto.email(), requestDto.password());
@@ -17,6 +18,6 @@ public class UserMapper {
                 .stream()
                 .map(c -> new ContactDto(c.getName(), c.getEmail()))
                 .toList();
-        return new UserDto(user.getId(), user.getName(), user.getEmail(),contactDtos);
+        return new UserDto(user.getName(), user.getEmail(),contactDtos);
     }
 }

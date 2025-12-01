@@ -1,5 +1,6 @@
 package api.main.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
@@ -38,7 +39,19 @@ public class Task {
     )
     private List<User> assignedUsers = new ArrayList<>();
 
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<ChatMessage> chatMessages = new ArrayList<>();
+
     public Task(){}
+
+    public List<ChatMessage> getChatMessages() {
+        return chatMessages;
+    }
+
+    public void setChatMessages(List<ChatMessage> chatMessages) {
+        this.chatMessages = chatMessages;
+    }
 
     public Task(String title, String description, TaskStatus taskStatus, User taskOwner) {
         this.title = title;

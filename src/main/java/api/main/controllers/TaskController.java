@@ -1,10 +1,7 @@
 package api.main.controllers;
 
 import api.main.dtos.auth.NewContactDto;
-import api.main.dtos.task.CreateTaskDto;
-import api.main.dtos.task.TaskStepDto;
-import api.main.dtos.task.UpdateTaskDto;
-import api.main.dtos.task.UpdateTaskStepDto;
+import api.main.dtos.task.*;
 import api.main.models.Task;
 import api.main.models.TaskStep;
 import api.main.models.User;
@@ -41,50 +38,64 @@ public class TaskController {
     }
 
     @PostMapping()
-    public ResponseEntity<Task> post(@RequestBody @Valid CreateTaskDto createTaskDto) {
+    public ResponseEntity<TaskResponseDto> post(@RequestBody @Valid CreateTaskDto createTaskDto) {
         User currentUser = getCurrentUser();
-        Task task = taskService.createTask(createTaskDto, currentUser);
+        TaskResponseDto task = taskService.createTask(createTaskDto, currentUser);
         return  ResponseEntity.ok(task);
     }
 
     @GetMapping()
-    public ResponseEntity<List<Task>> getAllTasks() {
+    public ResponseEntity<List<TaskResponseDto>> getAllTasks() {
         User currentUser = getCurrentUser();
-        List<Task> tasks = taskService.getAllTasksByUser(currentUser);
+        List<TaskResponseDto> tasks = taskService.getAllTasksByUser(currentUser);
         return ResponseEntity.ok(tasks);
     }
 
     @GetMapping("/{taskId}")
-    public ResponseEntity<Task> getById(@PathVariable("taskId") int taskId) {
+    public ResponseEntity<TaskResponseDto> getById(@PathVariable("taskId") int taskId) {
         User currentUser = getCurrentUser();
-        Task task = taskService.getTaskById(taskId, currentUser);
+        TaskResponseDto task = taskService.getTaskById(taskId, currentUser);
         return ResponseEntity.ok(task);
     }
 
     @GetMapping(value = "/export", produces = "text/csv")
     public ResponseEntity<Resource> exportTasksCsv() throws IOException {
         User currentUser = getCurrentUser();
-        List<Task> tasks = taskService.getAllTasksByUser(currentUser);
+        List<TaskResponseDto> tasks = taskService.getAllTasksByUser(currentUser);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (CSVPrinter csvPrinter = new CSVPrinter(
                 new OutputStreamWriter(out, StandardCharsets.UTF_8),
-                CSVFormat.EXCEL.builder().setHeader("Id", "Titulo", "Descrição", "Passos").build()
+                CSVFormat.EXCEL.builder().setHeader("Id", "Titulo", "Descrição", "Passos","Usuarios Anexados","Mensagens").build()
         )) {
 
-            for (Task t : tasks) {
-                List<TaskStep> taskSteps = t.getTaskSteps();
+            for (TaskResponseDto t : tasks) {
+                List<TaskStep> taskSteps = t.taskSteps();
 
                 StringBuilder taskStepConcat = new StringBuilder();
                 for (TaskStep ts : taskSteps) {
-                    taskStepConcat.append(ts.getDescription()).append(" ");
+                    taskStepConcat.append(ts.getDescription()).append("; ");
+                }
+
+                StringBuilder assignedUsersConcat = new StringBuilder();
+
+                for (String user : t.assignedUsers()) {
+                    assignedUsersConcat.append(user).append("; ");
+                }
+
+                StringBuilder chatMessagesConcat = new StringBuilder();
+
+                for (ChatMessageDto chatMessage : t.chatMessages()) {
+                    chatMessagesConcat.append(chatMessage.senderName()).append(": ").append(chatMessage.content()).append("; ");
                 }
 
                 csvPrinter.printRecord(
-                        t.getId(),
-                        t.getTitle(),
-                        t.getDescription(),
-                        taskStepConcat.toString()
+                        t.id(),
+                        t.title(),
+                        t.description(),
+                        taskStepConcat.toString(),
+                        assignedUsersConcat,
+                        chatMessagesConcat
                 );
             }
 
@@ -101,9 +112,9 @@ public class TaskController {
     }
 
     @PatchMapping("/{taskId}")
-    public ResponseEntity<Task> putTask(@PathVariable("taskId")int taskId,@RequestBody  UpdateTaskDto updateTaskDto) {
+    public ResponseEntity<TaskResponseDto> putTask(@PathVariable("taskId")int taskId,@RequestBody  UpdateTaskDto updateTaskDto) {
         User currentUser = getCurrentUser();
-        Task task = taskService.updateTask(taskId, updateTaskDto ,currentUser);
+        TaskResponseDto task = taskService.updateTask(taskId, updateTaskDto ,currentUser);
         return ResponseEntity.ok(task);
     }
 
@@ -115,36 +126,36 @@ public class TaskController {
     }
 
     @PostMapping("/{taskId}/assignuser")
-    public ResponseEntity<Task> postAssignUserToTask(@PathVariable("taskId") int taskId,@RequestBody @Valid NewContactDto newContactDto) {
+    public ResponseEntity<TaskResponseDto> postAssignUserToTask(@PathVariable("taskId") int taskId,@RequestBody @Valid NewContactDto newContactDto) {
         User currentUser = getCurrentUser();
-        Task task = taskService.assignContactToTask(taskId, newContactDto.email(), currentUser);
+        TaskResponseDto task = taskService.assignContactToTask(taskId, newContactDto.email(), currentUser);
         return ResponseEntity.ok(task);
     }
 
     @DeleteMapping("/{taskId}/assignuser")
-    public ResponseEntity<Task> deleteAssignedUserFromTask(
+    public ResponseEntity<TaskResponseDto> deleteAssignedUserFromTask(
             @PathVariable("taskId") int taskId,
             @RequestBody @Valid NewContactDto newContactDto) {
 
         User currentUser = getCurrentUser();
-        Task task = taskService.removeContactFromTask(taskId, newContactDto.email(), currentUser);
+        TaskResponseDto task = taskService.removeContactFromTask(taskId, newContactDto.email(), currentUser);
         return ResponseEntity.ok(task);
     }
 
     @PostMapping("/{taskId}/taskstep")
-    public ResponseEntity<Task> post(@PathVariable("taskId") int taskId,
+    public ResponseEntity<TaskResponseDto> post(@PathVariable("taskId") int taskId,
                                      @RequestBody @Valid TaskStepDto taskStepDto) {
         User currentUser = getCurrentUser();
-        Task task = taskService.createTaskStep(taskId, taskStepDto, currentUser);
+        TaskResponseDto task = taskService.createTaskStep(taskId, taskStepDto, currentUser);
         return ResponseEntity.ok(task);
     }
 
     @PatchMapping("/{taskId}/taskstep/{taskStepId}")
-    public ResponseEntity<Task> patch(@PathVariable("taskId") int taskId,
+    public ResponseEntity<TaskResponseDto> patch(@PathVariable("taskId") int taskId,
                                       @PathVariable("taskStepId") int taskStepId,
                                       @RequestBody UpdateTaskStepDto updateTaskStepDto) {
         User currentUser = getCurrentUser();
-        Task task = taskService.updateTaskStep(taskId, taskStepId, updateTaskStepDto, currentUser);
+        TaskResponseDto task = taskService.updateTaskStep(taskId, taskStepId, updateTaskStepDto, currentUser);
         return ResponseEntity.ok(task);
     }
 

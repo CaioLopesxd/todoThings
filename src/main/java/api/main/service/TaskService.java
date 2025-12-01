@@ -1,106 +1,109 @@
 package api.main.service;
 
-import api.main.dtos.task.CreateTaskDto;
-import api.main.dtos.task.TaskStepDto;
-import api.main.dtos.task.UpdateTaskDto;
-import api.main.dtos.task.UpdateTaskStepDto;
+import api.main.dtos.task.*;
 import api.main.exceptions.auth.UserNotFound;
 import api.main.exceptions.task.TaskStepNotFound;
 import api.main.exceptions.task.UserAlreadyAssignToTask;
 import api.main.exceptions.task.UserNotOwnerOfTask;
 import api.main.exceptions.task.UserNotAssignedToTask;
-import api.main.models.Task;
-import api.main.models.TaskStatus;
-import api.main.models.TaskStep;
-import api.main.models.User;
+import api.main.mappers.task.TaskMapper;
+import api.main.models.*;
+import api.main.repositories.ChatMessageRepository;
 import api.main.repositories.TaskRepository;
 import api.main.repositories.TaskStepRepository;
 import api.main.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TaskService {
     private final TaskRepository taskRepository;
     private final TaskStepRepository taskStepRepository;
     private final UserRepository userRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final TaskMapper taskMapper; // Agora é injetado, não instanciado com 'new'
 
     public TaskService(TaskRepository _taskRepository,
                        TaskStepRepository _taskStepRepository,
-                       UserRepository userRepository) {
+                       UserRepository _userRepository,
+                       ChatMessageRepository _chatMessageRepository,
+                       TaskMapper _taskMapper) {
         this.taskRepository = _taskRepository;
         this.taskStepRepository = _taskStepRepository;
-        this.userRepository = userRepository;
+        this.userRepository = _userRepository;
+        this.chatMessageRepository = _chatMessageRepository;
+        this.taskMapper = _taskMapper;
     }
-    
-    public Task createTask(CreateTaskDto createTaskDto, User taskOwner) {
+
+    private TaskResponseDto convertAndReturnDto(Task task) {
+        List<ChatMessage> messages = chatMessageRepository.findByTaskIdOrderBySentAtAsc(task.getId());
+        task.setChatMessages(messages);
+        return taskMapper.toTaskResponseDto(task);
+    }
+
+    public TaskResponseDto createTask(CreateTaskDto createTaskDto, User taskOwner) {
         Task task = new Task(createTaskDto.title(),
-                             createTaskDto.description(),
-                             TaskStatus.PENDENTE,
-                             taskOwner);
+                createTaskDto.description(),
+                TaskStatus.PENDENTE,
+                taskOwner);
         task.getAssignedUsers().add(taskOwner);
 
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+        return convertAndReturnDto(savedTask);
     }
 
-    public Task getTaskById(int taskId, User user) {
-        return taskRepository.findByIdAndAssignedUsersContains(taskId, user)
+    public TaskResponseDto getTaskById(int taskId, User user) {
+        Task task = taskRepository.findByIdAndAssignedUsersContains(taskId, user)
                 .orElseThrow(UserNotAssignedToTask::new);
-    }
-    
-    public List<Task> getAllTasksByUser(User user) {
-        return taskRepository.findByAssignedUsersContains(user);
+
+        return convertAndReturnDto(task);
     }
 
-    public Task updateTask(int id, UpdateTaskDto updateTaskDto, User owner) {
+    public List<TaskResponseDto> getAllTasksByUser(User user) {
+        List<Task> tasks = taskRepository.findByAssignedUsersContains(user);
+
+        return tasks.stream()
+                .map(this::convertAndReturnDto)
+                .toList();
+    }
+
+    public TaskResponseDto updateTask(int id, UpdateTaskDto updateTaskDto, User owner) {
         Task task = taskRepository.findByIdAndTaskOwner(id, owner)
                 .orElseThrow(UserNotOwnerOfTask::new);
 
-        if (updateTaskDto.title() != null) {
-            task.setTitle(updateTaskDto.title());
-        }
+        if (updateTaskDto.title() != null) task.setTitle(updateTaskDto.title());
+        if (updateTaskDto.description() != null) task.setDescription(updateTaskDto.description());
+        if (updateTaskDto.taskStatus() != null) task.setTaskStatus(updateTaskDto.taskStatus());
 
-        if (updateTaskDto.description() != null) {
-            task.setDescription(updateTaskDto.description());
-        }
-
-        if (updateTaskDto.taskStatus() != null) {
-            task.setTaskStatus(updateTaskDto.taskStatus());
-        }
-
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+        return convertAndReturnDto(savedTask);
     }
 
     public void deleteTask(int id, User user) {
         Task task = taskRepository.findByIdAndTaskOwner(id, user)
                 .orElseThrow(UserNotOwnerOfTask::new);
-
         taskRepository.delete(task);
     }
 
-    public Task assignContactToTask(int id, String email, User owner) {
+    public TaskResponseDto assignContactToTask(int id, String email, User owner) {
         Task task = taskRepository.findByIdAndTaskOwner(id, owner)
                 .orElseThrow(UserNotOwnerOfTask::new);
 
         User contact = userRepository.findByEmail(email)
                 .orElseThrow(UserNotFound::new);
 
-        if (contact.equals(task.getTaskOwner())) {
-            throw new UserAlreadyAssignToTask();
-        }
-
-        if (task.getAssignedUsers().contains(contact)) {
+        if (contact.equals(task.getTaskOwner()) || task.getAssignedUsers().contains(contact)) {
             throw new UserAlreadyAssignToTask();
         }
 
         task.getAssignedUsers().add(contact);
 
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+        return convertAndReturnDto(savedTask);
     }
 
-    public Task removeContactFromTask(int id, String email, User owner) {
+    public TaskResponseDto removeContactFromTask(int id, String email, User owner) {
         Task task = taskRepository.findByIdAndTaskOwner(id, owner)
                 .orElseThrow(UserNotOwnerOfTask::new);
 
@@ -113,49 +116,54 @@ public class TaskService {
 
         task.getAssignedUsers().remove(contact);
 
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+        return convertAndReturnDto(savedTask);
     }
-    public Task createTaskStep(int taskId, TaskStepDto taskStepDto, User user) {
-        Task task = taskRepository.findByIdAndTaskOwner(taskId,user).orElseThrow(UserNotOwnerOfTask::new);
+
+    public TaskResponseDto createTaskStep(int taskId, TaskStepDto taskStepDto, User user) {
+        Task task = taskRepository.findByIdAndTaskOwner(taskId, user)
+                .orElseThrow(UserNotOwnerOfTask::new);
 
         TaskStep taskStep = new TaskStep(task, taskStepDto.description(), TaskStatus.PENDENTE);
         taskStepRepository.save(taskStep);
 
-        return task;
+        return convertAndReturnDto(task);
     }
 
-    public Task updateTaskStep(int taskId, int stepId, UpdateTaskStepDto dto, User user) {
-
+    public TaskResponseDto updateTaskStep(int taskId, int stepId, UpdateTaskStepDto dto, User user) {
         Task task = taskRepository.findByIdAndAssignedUsersContains(taskId, user)
                 .orElseThrow(UserNotAssignedToTask::new);
 
         TaskStep taskStep = taskStepRepository.findByIdAndTaskId(stepId, taskId)
                 .orElseThrow(TaskStepNotFound::new);
 
-        if (dto.description() != null) {
-            taskStep.setDescription(dto.description());
-        }
+        if (dto.description() != null) taskStep.setDescription(dto.description());
+        if (dto.taskStatus() != null) taskStep.setStepStatus(dto.taskStatus());
 
-        if (dto.taskStatus() != null) {
-            taskStep.setStepStatus(dto.taskStatus());
-        }
+        taskStepRepository.save(taskStep);
 
-        return taskRepository.save(task);
+        return convertAndReturnDto(task);
     }
 
 
-    public void deleteTaskStep(int taskId, int stepId, User user) {
-
+    public TaskResponseDto deleteTaskStep(int taskId, int stepId, User user) {
         Task task = taskRepository.findByIdAndTaskOwner(taskId, user)
                 .orElseThrow(UserNotOwnerOfTask::new);
 
-        TaskStep step = taskStepRepository.findByIdAndTaskId(stepId,taskId)
-                .orElseThrow();
+        TaskStep step = taskStepRepository.findByIdAndTaskId(stepId, taskId)
+                .orElseThrow(TaskStepNotFound::new);
 
         task.getTaskSteps().remove(step);
-
-        taskRepository.save(task);
+        taskStepRepository.delete(step);
+        return convertAndReturnDto(task);
     }
 
+    public ChatMessageDto sendMessageToTask(int taskId, String content, User user) {
+        Task task = taskRepository.findByIdAndAssignedUsersContains(taskId, user)
+                .orElseThrow(UserNotAssignedToTask::new);
 
+        ChatMessage chatMessage = chatMessageRepository.save(new ChatMessage(task, user, content));
+
+        return new ChatMessageDto(chatMessage.getContent(), user.getName(), chatMessage.getSentAt());
+    }
 }
