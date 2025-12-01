@@ -74,11 +74,18 @@ Sub-tarefas ou checklist dentro de uma tarefa maior.
 | `DELETE` | `/api/task/{id}` | Remove uma tarefa |
 | `GET` | `/api/task/export` | **Exporta as tarefas para arquivo CSV** 📤 |
 
-### Colaboração em Tarefas
+### Colaboradores em Tarefas (`/api/task/id/assignuser`)
 | Método | Rota | Descrição |
 |---|---|---|
 | `POST` | `/api/task/{id}/assignuser` | Atribui um usuário (contato) a uma tarefa |
 | `DELETE` | `/api/task/{id}/assignuser` | Remove um usuário atribuído da tarefa |
+
+### Passos da Tarefa (`/api/task/id/step`)
+| Método | Rota | Descrição |
+|---|---|---|
+| `POST` | `/api/task/{id}/taskstep` | Adiciona um passo a uma tarefa |
+| `PATCH` | `/api/task/{id}/taskstep/{stepId}` | Atualiza um passo (ex: marcar como concluído) |
+| `DELETE` | `/api/task/{id}/taskstep/{stepId}` | Remove um passo da tarefa |
 
 ### WebSocket de Chat da Tarefa (Task Chat)
 | Método      | Rota                        | Descrição                                                   |
@@ -86,13 +93,6 @@ Sub-tarefas ou checklist dentro de uma tarefa maior.
 | `CONNECT`   | `/ws?token={jwt}`           | Abre a conexão WebSocket autenticada via Token JWT          |
 | `SUBSCRIBE` | `/topic/task/{taskId}/chat` | Inscreve o cliente para receber mensagens do chat da tarefa |
 | `SEND`      | `/app/task/{taskId}/chat`   | Envia uma mensagem para o chat da tarefa                    |
-
-### Mensagens
-| Método | Rota | Descrição |
-|---|---|---|
-| `Socket` | `/api/task/{id}/taskstep` | Adiciona um passo a uma tarefa |
-| `PATCH` | `/api/task/{id}/taskstep/{stepId}` | Atualiza um passo (ex: marcar como concluído) |
-| `DELETE` | `/api/task/{id}/taskstep/{stepId}` | Remove um passo da tarefa |
 
 ---
 
