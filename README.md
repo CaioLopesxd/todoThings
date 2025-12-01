@@ -41,6 +41,14 @@ Sub-tarefas ou checklist dentro de uma tarefa maior.
 - `stepStatus` (Enum)
 - `task` (Referência à tarefa pai)
 
+### ChatMessage (Mensagens do Chat da Task)
+Sub-tarefas ou checklist dentro de uma tarefa maior.
+- `id` (UUID)
+- `task_id` (ID)
+- `content` (String)
+- `sendAt` (DateTime)
+- `sender` (Referência ao usuario)
+- `task` (Referência à task)
 ---
 [![dbdiagram.png](./dbdiagram.png)]()
 
@@ -52,6 +60,7 @@ Sub-tarefas ou checklist dentro de uma tarefa maior.
 | `POST` | `/api/auth/register` | Registra um novo usuário |
 | `POST` | `/api/auth/login` | Realiza login e retorna o Token JWT |
 | `GET` | `/api/me` | Retorna os dados do usuário logado |
+| `PATCH` | `/api/me` | Atualiza os dados do usuario |
 | `POST` | `/api/contact` | Adiciona um novo contato à lista do usuário logado |
 | `POST` | `/api/logout` | Realiza logout (Stateless) |
 
@@ -71,10 +80,17 @@ Sub-tarefas ou checklist dentro de uma tarefa maior.
 | `POST` | `/api/task/{id}/assignuser` | Atribui um usuário (contato) a uma tarefa |
 | `DELETE` | `/api/task/{id}/assignuser` | Remove um usuário atribuído da tarefa |
 
-### Passos da Tarefa (Steps)
+### WebSocket de Chat da Tarefa (Task Chat)
+| Método      | Rota                        | Descrição                                                   |
+| ----------- | --------------------------- | ----------------------------------------------------------- |
+| `CONNECT`   | `/ws?token={jwt}`           | Abre a conexão WebSocket autenticada via Token JWT          |
+| `SUBSCRIBE` | `/topic/task/{taskId}/chat` | Inscreve o cliente para receber mensagens do chat da tarefa |
+| `SEND`      | `/app/task/{taskId}/chat`   | Envia uma mensagem para o chat da tarefa                    |
+
+### Mensagens
 | Método | Rota | Descrição |
 |---|---|---|
-| `POST` | `/api/task/{id}/taskstep` | Adiciona um passo a uma tarefa |
+| `Socket` | `/api/task/{id}/taskstep` | Adiciona um passo a uma tarefa |
 | `PATCH` | `/api/task/{id}/taskstep/{stepId}` | Atualiza um passo (ex: marcar como concluído) |
 | `DELETE` | `/api/task/{id}/taskstep/{stepId}` | Remove um passo da tarefa |
 
@@ -85,3 +101,4 @@ Sub-tarefas ou checklist dentro de uma tarefa maior.
 ### 1. Clonar o repositório
 ```bash
 git clone https://github.com/CaioLopesxd/todoThings
+```
